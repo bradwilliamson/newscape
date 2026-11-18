@@ -1,2 +1,8 @@
 CVS/
 .DS_Store
+# CMake build trees (see CMakePresets.json) and per-user presets
+/out/
+/CMakeUserPresets.json
+
+# Python bytecode caches
+__pycache__/

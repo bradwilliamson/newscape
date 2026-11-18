@@ -1,0 +1,28 @@
+# Warning baseline for gcc (preset gcc-debug).
+# Unique warnings per file and flag. Regenerate with:
+#   tools/warnings.py record gcc
+# total	69
+# count	flag	file
+5	-Wformat=	js/ref/js.c
+1	-Wpointer-to-int-cast	js/ref/jsapi.c
+1	-Wunused-but-set-variable	js/ref/jsapi.c
+2	-Wuse-after-free	js/ref/jsarray.c
+1	-Wpointer-to-int-cast	js/ref/jsatom.c
+1	-Wpointer-to-int-cast	js/ref/jsgc.c
+4	(no flag)	js/ref/jslock.c
+2	-Wdangling-else	js/ref/jsnum.c
+1	-Wuse-after-free	js/ref/jsnum.c
+6	-Wformat=	js/ref/jsobj.c
+2	-Wint-to-pointer-cast	js/ref/jsobj.c
+4	-Wpointer-to-int-cast	js/ref/jsobj.c
+2	-Wuse-after-free	js/ref/jsobj.c
+1	-Wint-to-pointer-cast	js/ref/jsobj.h
+2	-Wpointer-to-int-cast	js/ref/jsobj.h
+4	-Wswitch	js/ref/jsopcode.c
+1	-Wunused-function	js/ref/jsregexp.c
+1	-Wunused-but-set-variable	js/ref/jsscript.c
+1	-Wpointer-to-int-cast	js/ref/jsstr.c
+22	-Wformat=	js/ref/prcpucfg.c
+1	-Wshift-count-negative	js/ref/prlong.h
+3	-Wshift-count-overflow	js/ref/prlong.h
+1	-Wunused-but-set-variable	js/ref/prlong.h
