@@ -22,7 +22,12 @@
  * Fundamental types and related macros.
  */
 #include <stddef.h>
+#ifdef NEWSCAPE_PRCPUCFG_H
+/* newscape's CMake build passes the path of the prcpucfg.h it generates. */
+#include NEWSCAPE_PRCPUCFG_H
+#else
 #include "prcpucfg.h"
+#endif
 
 /*
  * Bitsize-explicit integer types.

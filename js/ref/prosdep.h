@@ -39,7 +39,11 @@
 #include "prunixos.h"
 
 /* Get endian-ness */
+#ifdef NEWSCAPE_PRCPUCFG_H
+#include NEWSCAPE_PRCPUCFG_H	/* see prtypes.h */
+#else
 #include "prcpucfg.h"
+#endif
 
 /*
  * Hack alert!

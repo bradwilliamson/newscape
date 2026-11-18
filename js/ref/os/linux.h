@@ -19,7 +19,13 @@
 #ifndef nspr_linux_defs_h___
 #define nspr_linux_defs_h___
 
+/*
+ * Modern userspace headers have no <linux/autoconf.h>, so newscape's CMake
+ * build asks the compiler whether it targets ELF instead (see below).
+ */
+#ifndef NEWSCAPE_CMAKE_BUILD
 #include <linux/autoconf.h>
+#endif
 #undef	HAVE_LONG_LONG
 #undef	HAVE_ALIGNED_DOUBLES
 #undef	HAVE_ALIGNED_LONGLONGS
@@ -28,7 +34,8 @@
  * ELF linux supports dl* functions.
  * Allow ELF functions for static or modular ELF support.
  */
-#if defined(CONFIG_BINFMT_ELF) || defined(CONFIG_BINFMT_ELF_MODULE)
+#if defined(CONFIG_BINFMT_ELF) || defined(CONFIG_BINFMT_ELF_MODULE) \
+    || (defined(NEWSCAPE_CMAKE_BUILD) && defined(__ELF__))
 #define	HAVE_DLL
 #define	USE_DLFCN
 #else
