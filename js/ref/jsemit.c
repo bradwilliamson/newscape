@@ -2067,7 +2067,9 @@ js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg)
     final = JS_malloc(cx, (count + 1) * sizeof(jssrcnote));
     if (!final)
 	return NULL;
-    memcpy(final, tmp, count * sizeof(jssrcnote));
+    /* tmp is NULL when there are no notes; memcpy(NULL, ...) is UB. */
+    if (count)
+	memcpy(final, tmp, count * sizeof(jssrcnote));
     SN_MAKE_TERMINATOR(&final[count]);
     CG_RESET_NOTES(cg);
     return final;

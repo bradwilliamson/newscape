@@ -1,0 +1,105 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 26, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "gcc",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_C_COMPILER": "gcc-13" }
+    },
+    {
+      "name": "clang",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_C_COMPILER": "clang-20" }
+    },
+    {
+      "name": "asan-ubsan",
+      "hidden": true,
+      "cacheVariables": { "NEWSCAPE_SANITIZERS": "address;undefined" }
+    },
+    {
+      "name": "gcc-debug",
+      "displayName": "GCC 13, debug",
+      "inherits": "gcc"
+    },
+    {
+      "name": "clang-debug",
+      "displayName": "Clang 20, debug",
+      "inherits": "clang"
+    },
+    {
+      "name": "gcc-asan-ubsan",
+      "displayName": "GCC 13, debug, ASan + UBSan",
+      "inherits": ["gcc", "asan-ubsan"]
+    },
+    {
+      "name": "clang-asan-ubsan",
+      "displayName": "Clang 20, debug, ASan + UBSan",
+      "inherits": ["clang", "asan-ubsan"]
+    }
+  ],
+  "buildPresets": [
+    { "name": "gcc-debug", "configurePreset": "gcc-debug" },
+    { "name": "clang-debug", "configurePreset": "clang-debug" },
+    { "name": "gcc-asan-ubsan", "configurePreset": "gcc-asan-ubsan" },
+    { "name": "clang-asan-ubsan", "configurePreset": "clang-asan-ubsan" }
+  ],
+  "testPresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error" }
+    },
+    { "name": "gcc-debug", "inherits": "base", "configurePreset": "gcc-debug" },
+    { "name": "clang-debug", "inherits": "base", "configurePreset": "clang-debug" },
+    { "name": "gcc-asan-ubsan", "inherits": "base", "configurePreset": "gcc-asan-ubsan" },
+    { "name": "clang-asan-ubsan", "inherits": "base", "configurePreset": "clang-asan-ubsan" }
+  ],
+  "workflowPresets": [
+    {
+      "name": "gcc-debug",
+      "steps": [
+        { "type": "configure", "name": "gcc-debug" },
+        { "type": "build", "name": "gcc-debug" },
+        { "type": "test", "name": "gcc-debug" }
+      ]
+    },
+    {
+      "name": "clang-debug",
+      "steps": [
+        { "type": "configure", "name": "clang-debug" },
+        { "type": "build", "name": "clang-debug" },
+        { "type": "test", "name": "clang-debug" }
+      ]
+    },
+    {
+      "name": "gcc-asan-ubsan",
+      "steps": [
+        { "type": "configure", "name": "gcc-asan-ubsan" },
+        { "type": "build", "name": "gcc-asan-ubsan" },
+        { "type": "test", "name": "gcc-asan-ubsan" }
+      ]
+    },
+    {
+      "name": "clang-asan-ubsan",
+      "steps": [
+        { "type": "configure", "name": "clang-asan-ubsan" },
+        { "type": "build", "name": "clang-asan-ubsan" },
+        { "type": "test", "name": "clang-asan-ubsan" }
+      ]
+    }
+  ]
+}

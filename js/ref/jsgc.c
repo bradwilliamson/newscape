@@ -66,6 +66,28 @@ typedef void (*GCFinalizeOp)(JSContext *cx, JSGCThing *thing);
 
 static GCFinalizeOp gc_finalizers[GCX_NTYPES];
 
+/*
+ * Adapters with the exact GCFinalizeOp type. Calling the typed finalizers
+ * through a cast GCFinalizeOp pointer is undefined behavior.
+ */
+static void
+gc_FinalizeObject(JSContext *cx, JSGCThing *thing)
+{
+    js_FinalizeObject(cx, (JSObject *)thing);
+}
+
+static void
+gc_FinalizeString(JSContext *cx, JSGCThing *thing)
+{
+    js_FinalizeString(cx, (JSString *)thing);
+}
+
+static void
+gc_FinalizeDouble(JSContext *cx, JSGCThing *thing)
+{
+    js_FinalizeDouble(cx, (jsdouble *)thing);
+}
+
 #ifdef JS_GCMETER
 #define METER(x) x
 #else
@@ -76,9 +98,9 @@ JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
     if (!gc_finalizers[GCX_OBJECT]) {
-	gc_finalizers[GCX_OBJECT] = (GCFinalizeOp)js_FinalizeObject;
-	gc_finalizers[GCX_STRING] = (GCFinalizeOp)js_FinalizeString;
-	gc_finalizers[GCX_DOUBLE] = (GCFinalizeOp)js_FinalizeDouble;
+	gc_finalizers[GCX_OBJECT] = gc_FinalizeObject;
+	gc_finalizers[GCX_STRING] = gc_FinalizeString;
+	gc_finalizers[GCX_DOUBLE] = gc_FinalizeDouble;
     }
 
     PR_InitArenaPool(&rt->gcArenaPool, "gc-arena", GC_ARENA_SIZE,

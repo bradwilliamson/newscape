@@ -63,7 +63,12 @@ PR_BEGIN_EXTERN_C
  * safe) leaves i as (jsint)d.  This also avoid anomalous NaN floating point
  * comparisons under MSVC.
  */
+/*
+ * Range-check before the (jsint) cast: converting an out-of-range double to
+ * an integer type is undefined behavior. jsint is a 32-bit int.
+ */
 #define JSDOUBLE_IS_INT(d, i) (JSDOUBLE_IS_FINITE(d) && !JSDOUBLE_IS_NEGZERO(d) \
+                               && (d) >= -2147483648.0 && (d) <= 2147483647.0 \
                                && ((d) == (i = (jsint)(d))))
 
 /* Initialize the Number class, returning its prototype object. */

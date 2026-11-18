@@ -227,12 +227,16 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
     while (i < argc) {
         JSString *str = JS_NewStringCopyZ(cx, argv[i]);
-        if (str == NULL)
+        if (str == NULL) {
+            JS_free(cx, vector);
             return 1;
+        }
         *p++ = STRING_TO_JSVAL(str);
         i++;
     }
     argsObj = JS_NewArrayObject(cx, length, vector);
+    /* The array copies the elements, so the vector can go. */
+    JS_free(cx, vector);
     if (argsObj == NULL)
         return 1;
 
