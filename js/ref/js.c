@@ -233,6 +233,8 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         i++;
     }
     argsObj = JS_NewArrayObject(cx, length, vector);
+    /* The array copies the elements, so the vector can go. */
+    JS_free(cx, vector);
     if (argsObj == NULL)
         return 1;
 
