@@ -65,7 +65,7 @@ set_tests_properties(jsref.embed PROPERTIES
 if(CMAKE_GENERATOR MATCHES "Ninja")
   find_package(Python3 3.8 REQUIRED COMPONENTS Interpreter)
   add_test(NAME jsref.cpucfg.header_selection
-    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_header_selection.py"
+    COMMAND "${Python3_EXECUTABLE}" -B "${CMAKE_CURRENT_SOURCE_DIR}/check_header_selection.py"
             --ninja "${CMAKE_MAKE_PROGRAM}"
             --build-dir "${PROJECT_BINARY_DIR}"
             --generated "${JSREF_CPUCFG_HEADER}"

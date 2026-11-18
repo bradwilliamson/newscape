@@ -12,10 +12,14 @@ set(NEWSCAPE_LEGACY_C_OPTIONS
   -fno-strict-aliasing
   # The code predates compilers that exploit signed-overflow UB.
   -fwrapv
+  # Tentative definitions shared across files become one common symbol, as
+  # they did by default before GCC 10 and Clang 11. Trade-off: ASan does not
+  # add redzones around common symbols.
+  -fcommon
 )
 
 # Historical code reports warnings but never fails on them. Counts are
-# tracked by tools/warnings.py against per-compiler baselines instead.
+# tracked by tools/warning_baseline.py against per-compiler baselines instead.
 set(NEWSCAPE_LEGACY_C_WARNINGS -Wall)
 
 # Code written for newscape: warnings are errors.

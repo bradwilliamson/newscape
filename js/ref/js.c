@@ -227,8 +227,10 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
     while (i < argc) {
         JSString *str = JS_NewStringCopyZ(cx, argv[i]);
-        if (str == NULL)
+        if (str == NULL) {
+            JS_free(cx, vector);
             return 1;
+        }
         *p++ = STRING_TO_JSVAL(str);
         i++;
     }

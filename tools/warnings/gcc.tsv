@@ -1,6 +1,6 @@
 # Warning baseline for gcc (preset gcc-debug).
 # Unique warnings per file and flag. Regenerate with:
-#   tools/warnings.py record gcc
+#   tools/warning_baseline.py record gcc
 # total	69
 # count	flag	file
 5	-Wformat=	js/ref/js.c

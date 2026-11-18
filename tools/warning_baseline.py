@@ -6,19 +6,23 @@ keeps their warning counts from growing: it clean-rebuilds a preset, counts
 unique warnings per (file, warning flag), and compares against the committed
 baseline for that compiler.
 
-    tools/warnings.py record gcc     # rebuild gcc-debug, rewrite tools/warnings/gcc.tsv
-    tools/warnings.py check clang    # rebuild clang-debug, fail if any count grew
+    tools/warning_baseline.py record gcc    # rebuild gcc-debug, rewrite tools/warnings/gcc.tsv
+    tools/warning_baseline.py check clang   # rebuild clang-debug, fail if any count grew
 
 A warning is unique by file, line, column, flag and message, so a warning in a
 header counts once no matter how many translation units include it. The tool
-refuses to trust a build log unless it shows every compile command in
-compile_commands.json running, and it fails on any warning line it cannot
+refuses to trust a build log unless it shows every object in
+compile_commands.json compiling, and it fails on any warning line it cannot
 parse rather than skipping it.
+
+(Named warning_baseline.py, not warnings.py: a module called "warnings" in a
+directory on sys.path shadows the standard library's warnings module.)
 """
 
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import re
@@ -26,6 +30,23 @@ import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
+from typing import Tuple
+
+sys.dont_write_bytecode = True  # keep generated files out of the source tree
+
+
+def _load_buildpaths():
+    """Load tools/buildpaths.py by path, without changing sys.path."""
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "buildpaths.py")
+    spec = importlib.util.spec_from_file_location("newscape_buildpaths", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+_buildpaths = _load_buildpaths()
+entry_object = _buildpaths.entry_object
+ninja_path = _buildpaths.ninja_path
 
 ROOT = Path(__file__).resolve().parent.parent
 BASELINE_DIR = ROOT / "tools" / "warnings"
@@ -38,9 +59,11 @@ WARNING = re.compile(
     r"^(?P<file>[^\s:][^:]*?)(?::(?P<line>\d+))?(?::(?P<col>\d+))?: warning: "
     r"(?P<msg>.*?)(?: \[(?P<flag>-W[^\]]+)\])?$"
 )
-NINJA_COMPILE = re.compile(r"^\[\d+/\d+\] Building C object (?P<output>\S+)$")
+NINJA_COMPILE = re.compile(r"^\[\d+/\d+\] Building C object (?P<output>.+?)\s*$")
 
-Key = tuple[str, str]  # (file relative to the repo, warning flag)
+# (file relative to the repo, warning flag). typing.Tuple, not tuple[...]:
+# this alias is evaluated at runtime, and Python 3.8 is supported.
+Key = Tuple[str, str]
 
 
 def relative(path: str) -> str:
@@ -70,11 +93,41 @@ def count_warnings(log: str) -> Counter[Key]:
     return Counter((f, flag) for f, _, _, flag, _ in unique)
 
 
+def untrusted_objects(entries: list[dict], build_dir: str) -> list[str]:
+    """Problems that would let one compile stand in for another object:
+    object paths through symlinks inside the build directory, and two
+    entries that name the same object."""
+    problems = []
+    seen: dict[str, str] = {}
+    for entry in entries:
+        obj = entry_object(entry, build_dir)
+        if obj.problem:
+            problems.append(f"{obj.spelled} {obj.problem}")
+        if obj.path in seen:
+            problems.append(f"{obj.spelled} names the same object as {seen[obj.path]}")
+        seen[obj.path] = obj.spelled
+    return problems
+
+
+def missing_compiles(entries: list[dict], log: str, build_dir: str) -> list[str]:
+    """Canonical objects in compile_commands.json that the log never compiles.
+
+    compile_commands.json spells outputs relative (CMake 3.x) or absolute
+    (CMake 4.x); Ninja's status lines are relative to the build directory.
+    Both are compared in canonical form (tools/buildpaths.py).
+    """
+    expected = {entry_object(e, build_dir).path for e in entries}
+    compiled = {ninja_path(m["output"], build_dir)
+                for m in map(NINJA_COMPILE.match, log.splitlines()) if m}
+    return sorted(expected - compiled)
+
+
 def require_full_build(log: str, build_dir: Path) -> None:
     entries = json.loads((build_dir / "compile_commands.json").read_text())
-    expected = {e["output"] for e in entries}
-    compiled = {m["output"] for m in map(NINJA_COMPILE.match, log.splitlines()) if m}
-    missing = sorted(expected - compiled)
+    problems = untrusted_objects(entries, str(build_dir))
+    if problems:
+        sys.exit("cannot match the build log to objects:\n  " + "\n  ".join(problems))
+    missing = missing_compiles(entries, log, str(build_dir))
     if missing:
         sys.exit("build log does not show these objects compiling, so their "
                  "warnings would be missed:\n  " + "\n  ".join(missing))
@@ -143,7 +196,7 @@ def write_baseline(compiler: str, counts: Counter[Key]) -> None:
     lines = [
         f"# Warning baseline for {compiler} (preset {PRESETS[compiler]}).",
         "# Unique warnings per file and flag. Regenerate with:",
-        f"#   tools/warnings.py record {compiler}",
+        f"#   tools/warning_baseline.py record {compiler}",
         f"# total\t{sum(counts.values())}",
         "# count\tflag\tfile",
     ]
@@ -188,7 +241,7 @@ def main() -> int:
         return 1
     if improvements:
         print(f"fewer warnings than the baseline; lock it in with "
-              f"`tools/warnings.py record {args.compiler}`")
+              f"`tools/warning_baseline.py record {args.compiler}`")
     return 0
 
 
